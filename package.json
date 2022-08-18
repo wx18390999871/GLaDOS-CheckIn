@@ -1,0 +1,13 @@
+{
+  "name": "puppeteer-glados",
+  "version": "0.0.1",
+  "description": "项目描述...",
+  "main": "index.js",
+  "repository": {},
+  "devDependencies": {
+    "dotenv": "^16.0.1"
+  },
+  "dependencies": {
+    "axios": "^0.27.2"
+  }
+}
