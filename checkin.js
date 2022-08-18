@@ -1,7 +1,8 @@
-require('dotenv').config()
+// require('dotenv').config()
 const axios = require('axios')
 
-const cookie = process.env.cookie
+const cookies = process.env.COOKIES?.split('&&') ?? []
+const PUSHPLUS = process.env.PUSHPLUS;
 
 const checkIn = async (cookie) => {
   return axios({
@@ -40,10 +41,41 @@ const checkInAndGetStatus = async (cookie) => {
   };
 };
 
+const pushplus = (token, infos) => {
+  const titleEmail = infos?.[0]['账号'];
+  const titleLeftDays = infos?.[0]['天数'];
+  const titleCheckInMessage = infos?.[0]['签到情况'];
+  const titleSpace = 4;
+
+  const title = (
+      '账号: ' + `${titleEmail}`.padEnd(titleEmail.length + titleSpace) +
+      '天数: ' + `${titleLeftDays}`.padEnd(titleLeftDays.toString().length + titleSpace) +
+      '签到情况: ' + `${titleCheckInMessage}`
+  ).slice(0, 100);  //pushplus标题最大长度为100
+
+  const data = {
+      token,
+      title,
+      content: JSON.stringify(infos),
+      template: 'json'
+  };
+  console.log(data);
+
+  return axios({
+      method: 'post',
+      url: `http://www.pushplus.plus/send`,
+      data
+  });
+};
+
 const GLaDOSCheckIn = async () => {
   try {
-    const infos = await checkInAndGetStatus(cookie)
-    console.log("🚀 ~ file: checkin.js ~ line 46 ~ GLaDOSCheckIn ~ infos", infos)
+    const infos = await Promise.all(cookies.map(async cookie => await checkInAndGetStatus(cookie)));  //虽然map方法的参数是async函数，但它是并发执行的，因为只有async函数内部是继发执行，外部不受影响。
+    console.log(infos);
+    if (PUSHPLUS && infos) {
+      const pushResult = (await pushplus(PUSHPLUS, infos))?.data?.msg;
+      console.log(pushResult);
+  }
   } catch (error) {
     console.log(error)
   }
